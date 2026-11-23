@@ -144,7 +144,9 @@ public:
     {
         if (!indicator_ || directory_.empty()) return false;
         const auto path = directory_ / ("icon-" + std::to_string(icons_.size()) + ".png");
-        if (fl_write_png(path.c_str(), &image) != 0) {
+        // FLTK's PNG writer takes a mutable image; keep the caller's image const.
+        Fl_RGB_Image png(image.array, image.data_w(), image.data_h(), image.d(), image.ld());
+        if (fl_write_png(path.c_str(), &png) != 0) {
             std::error_code ec; std::filesystem::remove(path, ec); return false;
         }
         icons_.push_back(path); // retain while the host may still read previous images
