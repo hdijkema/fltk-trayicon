@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.21)
+project(tray-consumer LANGUAGES CXX)
+find_package(fltk-trayicon 0.1 CONFIG REQUIRED)
+add_executable(tray-consumer main.cpp)
+target_link_libraries(tray-consumer PRIVATE fltk-trayicon::fltk-trayicon)
+enable_testing()
+add_test(NAME installed-package COMMAND tray-consumer)

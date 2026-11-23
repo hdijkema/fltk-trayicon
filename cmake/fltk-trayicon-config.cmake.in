@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+if(NOT TARGET fltk::images)
+    find_dependency(FLTK 1.4 CONFIG)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/fltk-trayicon-targets.cmake")
+check_required_components(fltk-trayicon)
