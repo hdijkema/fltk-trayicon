@@ -24,7 +24,7 @@ ctest --test-dir build/dev -C Release --output-on-failure
 cmake --install build/dev --config Release --prefix build/install
 ```
 
-CMake uses an installed FLTK 1.4 package, or fetches FLTK 1.4.5 at a fixed commit.
+CMake uses an installed FLTK 1.4.5 or newer package, or fetches FLTK 1.4.5 at its stable release tag.
 Set `FLTK_DIR` to choose your package. Its architecture, build configuration and
 runtime must match your application. `FLTK_TRAYICON_FETCH_FLTK=OFF` disables fetching.
 The optional `fltk-trayicon-demo` shows a coloured icon, checkable menu and callbacks.
@@ -86,3 +86,17 @@ linking exception. GTK/AppIndicator and AppKit are system runtime components.
 Platform design follows the author's `racket-tray` and `razer-mouse-lite` work.
 API references: [FLTK timers](https://www.fltk.org/doc-1.4/classFl.html) and
 [AppKit status items](https://developer.apple.com/documentation/appkit/nsstatusitem).
+
+## Release versions
+
+The current library version is **0.1.0**, identified by tag `v0.1.0`.
+Dependencies use named, tested releases: FLTK **1.4.5** (`release-1.4.5`),
+not a development branch or a moving `latest` reference. Local source/package
+paths remain available for development. Upgrade a dependency deliberately,
+run the tests and publish a new library release when appropriate.
+
+Push the matching `v<project-version>` tag after committing the release sources.
+The workflow tests the platforms first and then creates a GitHub source release.
+For the first release, publish fltk-css before fltk-cell, which depends on its
+`v0.1.0` release. pgadmin-jr consumes those tags after publication. Release tags
+must remain immutable; do not move a published tag to different sources.
