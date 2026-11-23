@@ -32,7 +32,8 @@ HICON native_icon(const Fl_RGB_Image& image)
         pixels[y * width + x] = (alpha << 24) | ((rgba[0] * alpha / 255) << 16) |
             ((rgba[1] * alpha / 255) << 8) | (rgba[2] * alpha / 255);
     }
-    HBITMAP mask = CreateBitmap(width, height, 1, 1, nullptr);
+    const std::vector<unsigned char> mask_bits(((width + 15) / 16) * 2 * height, 0);
+    HBITMAP mask = CreateBitmap(width, height, 1, 1, mask_bits.data());
     ICONINFO icon{}; icon.fIcon = TRUE; icon.hbmColor = bitmap; icon.hbmMask = mask;
     HICON result = mask ? CreateIconIndirect(&icon) : nullptr;
     if (mask) DeleteObject(mask);
