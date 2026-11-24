@@ -1,7 +1,7 @@
 # fltk-trayicon
 
 A small C++17 static library for system tray icons in FLTK 1.4 applications.
-No Qt dependency, extra tray DLL, or blocking secondary event loop.
+Uses the native platform event loop without an extra tray DLL.
 
 - Windows: native `Shell_NotifyIconW`, menus, UTF-8 tooltips, Explorer restart recovery.
 - Linux: optional GTK3/Ayatana AppIndicator, loaded at runtime with `dlopen`.
