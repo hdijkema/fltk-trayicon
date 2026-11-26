@@ -1,5 +1,9 @@
 # fltk-trayicon
 
+<img src="docs/assets/logo.svg" width="80" height="80" alt="fltk-trayicon website logo">
+
+[Homepage](https://hdijkema.github.io/fltk-trayicon/) | [API reference and examples](docs/API.md)
+
 A small C++17 static library for system tray icons in FLTK 1.4 applications.
 Uses the native platform event loop without an extra tray DLL.
 

@@ -1,0 +1,15 @@
+title: fltk-trayicon
+url: https://hdijkema.github.io
+baseurl: /fltk-trayicon
+repository_url: https://github.com/hdijkema/fltk-trayicon
+markdown: kramdown
+kramdown:
+  input: GFM
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-relative-links
+defaults:
+  - scope:
+      path: "**/*.md"
+    values:
+      layout: documentation
