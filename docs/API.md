@@ -6,84 +6,30 @@ A C++17 static library for native notification-area icons and menus in FLTK
 applications. The public API exposes no platform types. Every operation,
 including construction and destruction, belongs on the FLTK main thread.
 
-## Headers and linking
+## How the API works
 
-The complete API is declared in [fltk_trayicon.h](../fltk_trayicon.h).
-`Fltk_TrayIcon` is in the global namespace.
+Construct a `Fltk_TrayIcon`, supply an icon and menu, attach your callback, then
+call `show()`. The FLTK event loop delivers desktop actions to your application.
 
-```cmake
-cmake_minimum_required(VERSION 3.21)
-project(tray-example LANGUAGES CXX)
-find_package(fltk-trayicon 0.1 CONFIG REQUIRED)
-add_executable(example main.cpp)
-target_compile_features(example PRIVATE cxx_std_17)
-target_link_libraries(example PRIVATE fltk-trayicon::fltk-trayicon)
-```
-
-The target supplies FLTK images and the platform libraries. An application can
-also use `add_subdirectory` and the same target. Use one compatible FLTK build
-for the application and library.
-
-## Options
-
-`Fltk_TrayIcon::Options` has these public fields:
-
-| Field | Default | Meaning |
-| --- | --- | --- |
-| `std::string id` | `"fltk-trayicon"` | Application/indicator identity. |
-| `std::string title` | `"FLTK application"` | Native indicator title. |
-| `bool enabled` | `true` | Set false to create no native resources, load no GTK modules and emit no actions; useful for previews and tests. |
-| `bool automatic_poll` | `true` | Use an FLTK timer to dispatch events. Set false when your own main-thread loop calls `poll()`. |
-
-Options are supplied at construction. Keep the FLTK event loop running for
-automatic event dispatch.
-
-## MenuItem, Event and Callback
-
-`Fltk_TrayIcon::MenuItem` is an application-supplied value:
-
-| Field | Default | Meaning |
-| --- | --- | --- |
-| `std::string label` | Empty | UTF-8 label. An empty label creates a separator. |
-| `int id` | `0` | Application action ID; any integer is allowed. |
-| `bool enabled` | `true` | Whether the entry can be activated. |
-| `bool checkable` | `false` | Whether it displays a check mark. |
-| `bool checked` | `false` | Current check state. |
-
-`enum class Event { Activate, DoubleClick, Menu };` distinguishes activation,
-double-click and menu actions. `Callback` is
-`std::function<void(Event, int)>`. The integer is meaningful for `Event::Menu`.
-Callbacks run on the FLTK main thread when events are dispatched.
-
-Check marks do not toggle automatically. Update your own model and call `menu()`
-again with the new state. Gesture availability depends on the platform and panel.
-
-## Fltk_TrayIcon
-
-| Public declaration | Preconditions and result |
+| Class or operation | Construction, use and behavior |
 | --- | --- |
-| `Fltk_TrayIcon()` | Construct with default `Options`. |
-| `explicit Fltk_TrayIcon(const Options& options)` | Construct the platform backend, or an inert backend when disabled. Start automatic polling if enabled by the options. |
-| `~Fltk_TrayIcon()` | Remove native resources and cancel the FLTK timer. The class is not copyable; copy construction and copy assignment are deleted. |
-| `bool icon_svg(const std::string& svg)` | Supply a complete SVG document, not a filename. FLTK renders it; invalid input returns false and retains the previous icon. |
-| `bool icon(const Fl_RGB_Image& image)` | Copy valid RGB/RGBA pixels. The caller need not retain the source image afterwards. Invalid data returns false and retains the previous icon. |
-| `void tooltip(const std::string& text)` | Set UTF-8 tooltip text. Native platform display limits apply. |
-| `void menu(const std::vector<MenuItem>& items, int default_action = 0)` | Replace the menu and its default action ID. Items are supplied by value through the backend; no caller-owned vector needs to stay alive. |
-| `void callback(Callback action)` | Replace the event callback. Keep captured application objects alive while events can arrive; an empty callback disables application event handling. |
-| `void show()` | Request native visibility, preserving the icon and menu. |
-| `void hide()` | Remove the visible icon, preserving its configured icon and menu. |
-| `bool available() const` | Report a usable visible tray, not just a loaded platform library. Check after `show()` and retain a normal window/exit path if unavailable. |
-| `void poll()` | Collect and dispatch queued events on the FLTK main thread. Call this from your existing loop when automatic polling is disabled. |
+| `Fltk_TrayIcon()` / `Fltk_TrayIcon(options)` | Create the native backend using default or explicit options. Automatic polling uses an FLTK timer. Disabled options create an inert instance for previews/tests. |
+| `icon_svg()`, `icon()`, `tooltip()` | Configure the visible identity. Icon pixels are copied; invalid icon replacements retain the previous image. |
+| `menu()`, `callback()` | Set entries/default action and receive activation or menu events. Menu action IDs belong to your application. Update check states yourself and submit the menu again. |
+| `show()`, `hide()`, `available()` | Control visibility while retaining configured state. Check availability after showing and keep a normal exit path if no tray is usable. |
+| `poll()` / destruction | Call `poll()` yourself when automatic polling is disabled. Destruction removes native resources and cancels the timer. |
 
-A callback may destroy the tray. Subsequent events from that polling batch are
-then discarded. Do not access the destroyed instance from your callback.
-`fltk-trayicon_global.h` supplies the export macro; it has no runtime API.
+All calls and callbacks belong on the FLTK main thread. A tray can outlive the
+last visible window, so keep `Fl::wait()` running while the tray is in use.
+Captured application objects must outlive callbacks that use them. Desktop click
+and double-click gestures depend on the platform and indicator host.
 
 ## Complete example: show settings or quit
 
-Save this as `main.cpp` and use the CMake file above. The tray can keep the
-process alive after the settings window is hidden. When no tray is available,
-closing the window exits instead.
+Save this as `main.cpp` and use the CMake file in [Headers and
+linking](#headers-and-linking). The tray can keep the process alive after the
+settings window is hidden. When no tray is available, closing the window exits
+instead.
 
 ```cpp
 #include <FL/Fl.H>
@@ -123,6 +69,29 @@ The tray is destroyed before the window. The callback's captures remain alive
 until event dispatch stops. The example does not access profiles, settings files
 or databases.
 
+## Class API
+
+### Fltk_TrayIcon
+
+| Public declaration | Preconditions and result |
+| --- | --- |
+| `Fltk_TrayIcon()` | Construct with default `Options`. |
+| `explicit Fltk_TrayIcon(const Options& options)` | Construct the platform backend, or an inert backend when disabled. Start automatic polling if enabled by the options. |
+| `~Fltk_TrayIcon()` | Remove native resources and cancel the FLTK timer. The class is not copyable; copy construction and copy assignment are deleted. |
+| `bool icon_svg(const std::string& svg)` | Supply a complete SVG document, not a filename. FLTK renders it; invalid input returns false and retains the previous icon. |
+| `bool icon(const Fl_RGB_Image& image)` | Copy valid RGB/RGBA pixels. The caller need not retain the source image afterwards. Invalid data returns false and retains the previous icon. |
+| `void tooltip(const std::string& text)` | Set UTF-8 tooltip text. Native platform display limits apply. |
+| `void menu(const std::vector<MenuItem>& items, int default_action = 0)` | Replace the menu and its default action ID. Items are supplied by value through the backend; no caller-owned vector needs to stay alive. |
+| `void callback(Callback action)` | Replace the event callback. Keep captured application objects alive while events can arrive; an empty callback disables application event handling. |
+| `void show()` | Request native visibility, preserving the icon and menu. |
+| `void hide()` | Remove the visible icon, preserving its configured icon and menu. |
+| `bool available() const` | Report a usable visible tray, not just a loaded platform library. Check after `show()` and retain a normal window/exit path if unavailable. |
+| `void poll()` | Collect and dispatch queued events on the FLTK main thread. Call this from your existing loop when automatic polling is disabled. |
+
+A callback may destroy the tray. Subsequent events from that polling batch are
+then discarded. Do not access the destroyed instance from your callback.
+`fltk-trayicon_global.h` supplies the export macro; it has no runtime API.
+
 ## Manual polling and isolated use
 
 For an application that already polls on the main thread:
@@ -152,6 +121,63 @@ desktop integration still requires verification on those systems. On Linux,
 rendered icon files stay in a private temporary directory until destruction so
 the panel can read them asynchronously. Only owned files are removed; abnormal
 termination may leave that directory behind.
+
+## Supporting data types
+
+These public value and configuration types supply inputs and results for the
+operations above. Their fields and defaults are listed here for reference.
+
+### Options
+
+`Fltk_TrayIcon::Options` has these public fields:
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `std::string id` | `"fltk-trayicon"` | Application/indicator identity. |
+| `std::string title` | `"FLTK application"` | Native indicator title. |
+| `bool enabled` | `true` | Set false to create no native resources, load no GTK modules and emit no actions; useful for previews and tests. |
+| `bool automatic_poll` | `true` | Use an FLTK timer to dispatch events. Set false when your own main-thread loop calls `poll()`. |
+
+Options are supplied at construction. Keep the FLTK event loop running for
+automatic event dispatch.
+
+### MenuItem, Event and Callback
+
+`Fltk_TrayIcon::MenuItem` is an application-supplied value:
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `std::string label` | Empty | UTF-8 label. An empty label creates a separator. |
+| `int id` | `0` | Application action ID; any integer is allowed. |
+| `bool enabled` | `true` | Whether the entry can be activated. |
+| `bool checkable` | `false` | Whether it displays a check mark. |
+| `bool checked` | `false` | Current check state. |
+
+`enum class Event { Activate, DoubleClick, Menu };` distinguishes activation,
+double-click and menu actions. `Callback` is
+`std::function<void(Event, int)>`. The integer is meaningful for `Event::Menu`.
+Callbacks run on the FLTK main thread when events are dispatched.
+
+Check marks do not toggle automatically. Update your own model and call `menu()`
+again with the new state. Gesture availability depends on the platform and panel.
+
+## Headers and linking
+
+The complete API is declared in [fltk_trayicon.h](../fltk_trayicon.h).
+`Fltk_TrayIcon` is in the global namespace.
+
+```cmake
+cmake_minimum_required(VERSION 3.21)
+project(tray-example LANGUAGES CXX)
+find_package(fltk-trayicon 0.1 CONFIG REQUIRED)
+add_executable(example main.cpp)
+target_compile_features(example PRIVATE cxx_std_17)
+target_link_libraries(example PRIVATE fltk-trayicon::fltk-trayicon)
+```
+
+The target supplies FLTK images and the platform libraries. An application can
+also use `add_subdirectory` and the same target. Use one compatible FLTK build
+for the application and library.
 
 ## Build and installation
 

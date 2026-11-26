@@ -167,3 +167,16 @@ pre code { display:block; min-width:max-content; }
 .theme-toggle:hover { border-color:var(--accent); }
 .theme-toggle:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
 @media(max-width:760px) { .site-header nav { width:100%; justify-content:space-between; } }
+
+/* Native details keeps library navigation usable without JavaScript. */
+.library-menu { position:relative; z-index:20; margin-left:auto; flex-shrink:0; font-size:.8rem; }
+.library-menu summary { display:flex; align-items:center; gap:.6rem; padding:.4rem .6rem; border:1px solid var(--line); border-radius:6px; cursor:pointer; list-style:none; }
+.library-menu summary::-webkit-details-marker { display:none; }
+.library-menu summary::after { content:"\25be"; font-size:.65rem; color:var(--muted); }
+.library-menu[open] summary { border-color:var(--accent); }
+.library-menu summary:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+.library-menu-links { position:absolute; top:calc(100% + .5rem); right:0; min-width:190px; padding:.4rem; border:1px solid var(--line); border-radius:8px; background:var(--surface); box-shadow:0 10px 28px #0002; }
+.library-menu-links a { display:block; padding:.55rem .7rem; border-radius:4px; text-decoration:none; white-space:nowrap; }
+.library-menu-links a:hover { color:var(--accent); background:var(--soft); }
+.library-menu + .theme-toggle { margin-left:0; }
+@media(max-width:420px) { .site-header { gap:.75rem; } .site-header .brand { width:100%; } .library-menu { margin-left:0; } .library-menu-links { left:0; right:auto; } .library-menu + .theme-toggle { margin-left:auto; } }

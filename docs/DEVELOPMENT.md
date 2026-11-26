@@ -36,3 +36,15 @@ the keyboard-accessible header button. The preference uses the site's own
 `data-theme-key` in local storage; storage failures do not prevent switching.
 The default is dark even when the operating system prefers light. Without
 JavaScript, the pages retain their default dark appearance.
+
+## API documentation order and library navigation
+
+`API.md` starts with the public API's construction, ownership and behavior,
+followed by a complete program. Detailed class/member references and usage
+patterns precede supporting public data types and build details. Keep complete
+examples self-contained when updating the API.
+
+The homepage and documentation header include a native HTML `details` dropdown
+before the theme button, linking to the other four library homepages. It uses
+ordinary links and works without JavaScript. Update both headers when the
+library list changes.
